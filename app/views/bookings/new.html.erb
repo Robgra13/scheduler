@@ -1,0 +1,44 @@
+<div class="container">
+  <h1>Book an Event</h1>
+  <%= form_with url: bookings_path, method: :post, html: { class: 'needs-validation' } do |form| %>
+  
+    <div class="form-group">
+      <%= form.label :summary, "Event Summary", class: "form-label" %>
+      <%= form.text_field :summary, class: "form-control", placeholder: "Enter event summary" %>
+    </div>
+    
+    <div class="form-group">
+      <%= form.label :date, "Date", class: "form-label" %>
+      <%= form.date_field :date, value: Date.today, class: "form-control" %>
+    </div>
+    
+    <div class="form-group">
+      <%= form.label :time, "Time", class: "form-label" %>
+      <%= form.time_field :time, value: Time.now.strftime("%H:%M"), class: "form-control" %>
+    </div>
+    
+    <div class="form-group">
+      <%= form.label :duration, "Duration (minutes)", class: "form-label" %>
+      <%= form.number_field :duration, class: "form-control", placeholder: "Enter duration in minutes" %>
+    </div>
+    
+    <div class="form-group mb-1">
+      <%= form.label :booker_email, "Your Email", class: "form-label" %>
+      <%= form.email_field :booker_email, value: current_user.email, class: "form-control", placeholder: "Enter your email" %>
+      <small id="emailHelp" class="form-text text-muted"></small>
+    </div>
+    
+    <div class="form-group">
+      <%= form.label :attendees, "Additional Attendees (comma-separated emails)", class: "form-label" %>
+      <%= form.text_area :attendees, class: "form-control", placeholder: "Enter attendees' emails" %>
+    </div>
+    
+    
+    <div class="form-group mt-3">
+      <%= form.submit "Book Event", class: "btn btn-primary" %>
+    </div>
+
+  <% end %>
+</div>
+
+

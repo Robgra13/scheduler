@@ -1,0 +1,25 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <%= link_to 'Scheduler', root_path, class: 'navbar-brand fs-2 mb-1 mx-3' %>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <% if current_user %>
+        <li class="nav-item">
+          <%= link_to 'Book event', new_booking_path, class: 'nav-link active' %>
+        </li>
+        <% end %>
+       <ul class="navbar-nav custom-mr-5">
+    <li class="nav-item user-name">
+    </li>
+    <% if current_user %>
+    <li class="nav-item">
+    <%= link_to "Logout", destroy_user_session_path, method: :delete, class: "position-absolute top end-0 btn btn-xs btn-outline-danger mx-4", data: { turbo_method: :delete } %>
+    </li>
+    <% end %>
+  </ul>
+    </div>
+  </div>
+</nav>

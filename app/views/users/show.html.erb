@@ -1,0 +1,27 @@
+<h1>User Details</h1>
+
+<p>
+  <strong>Email:</strong>
+  <%= @user.email %>
+</p>
+
+<h2>Availability</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Day</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] %>
+    <% days_of_week.each do |day| %>
+      <tr>
+        <td><%= day.capitalize %></td>
+        <td><%= @user.availability[day]['start'] || 'Not Available' %></td>
+        <td><%= @user.availability[day]['end'] || 'Not Available' %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
