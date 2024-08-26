@@ -1,5 +1,6 @@
 require 'google/apis/calendar_v3'
 require 'google/api_client/client_secrets'
+TimeSlot = Data.define(:start, :end)
 
 class GoogleCalendarService
 
@@ -15,15 +16,14 @@ class GoogleCalendarService
     service.authorization = @client
 
     calendar_id = @target_email || 'primary'
-    events = []
 
     calendar_events = service.list_events(calendar_id,
                                           max_results: 10,
                                           single_events: true,
                                           order_by: 'startTime',
-                                          time_min: Time.now.iso8601)
-    calendar_events.items.each do |event|
-      events << {
+                                          time_min: Time.current.iso8601)
+    calendar_events.items.each.map do |event|
+      {
         start: event.start.date_time || event.start.date,
         end: event.end.date_time || event.end.date,
         summary: event.summary,
@@ -31,8 +31,6 @@ class GoogleCalendarService
         event_type: determine_event_type(calendar_id)
       }
     end
-
-    events
   end
 
 
@@ -42,7 +40,7 @@ class GoogleCalendarService
     # Check if any event overlaps with the proposed time slot
     events.none? do |event|
       event[:start] < end_time && event[:end] > start_time
-      end
+    end
   end
 
 
@@ -50,51 +48,25 @@ class GoogleCalendarService
     events = list_events
     availability = user.availability
 
-    free_slots = {}
-
-    availability.each do |day, times|
-      start_of_day = Time.now.beginning_of_week + day_index(day).days
-      available_start = Time.parse("#{start_of_day.to_date} #{times['start']}")
-      available_end = Time.parse("#{start_of_day.to_date} #{times['end']}")
+    availability.each_with_object({}) do |(day, times), free_slots|
+      day_number = day_to_cwday(day)
+      available_start, available_end = calculate_day_times(day_number, times)
 
       if events.any?
-        # Filter events for the current day
-        day_events = events.select { |e| e[:start].to_date == start_of_day.to_date }
-        day_events.sort_by! { |e| e[:start] }
-        previous_end = available_start
-
-        # Find gaps between events
-        day_events.each do |event|
-          if event[:start] > previous_end
-            free_slots[day] ||= []
-            free_slots[day] << { start: previous_end, end: event[:start] }
-          end
-          previous_end = [previous_end, event[:end]].max
-        end
-
-        # Check if there is free time after the last event until end_of_day
-        if previous_end < available_end
-          free_slots[day] ||= []
-          free_slots[day] << { start: previous_end, end: available_end }
-        end
+        day_events = filter_events_for_day(events, day_number)
+        day_slots = find_free_slots_within_day(day_events, available_start, available_end)
+        free_slots[day] = day_slots
       else
-        # If there are no events, the entire availability window is free
-        free_slots[day] = [{ start: available_start, end: available_end }]
+        free_slots[day] = [TimeSlot.new(available_start, available_end )]
       end
     end
-    free_slots
   end
 
   def create_event(summary, start_time, end_time, attendees)
-    # Check for free slots before creating the event
     free_slots = list_free_slots(@current_user)
-
-    # Determine the day of the week for the requested start time
-    day = start_time.strftime("%A").downcase
-
-    # Find if the start_time and end_time fall within any free slots
+    day = Date::DAYNAMES[start_time.wday].downcase
     available = free_slots[day]&.any? do |slot|
-      start_time >= slot[:start] && end_time <= slot[:end]
+      start_time >= slot.start && end_time <= slot.end
     end
 
     if available
@@ -123,8 +95,6 @@ class GoogleCalendarService
 
   private
 
-
-
   def initialize_google_client
     client_secrets = Google::APIClient::ClientSecrets.new({
       "web" => {
@@ -151,14 +121,39 @@ class GoogleCalendarService
     calendar_summary.downcase.include?("work") ? "Work" : "Personal"
   end
 
-  def day_index(day)
-    case day
-    when "monday"    then 0
-    when "tuesday"   then 1
-    when "wednesday" then 2
-    when "thursday"  then 3
-    when "friday"    then 4
-    else 0
+  def day_to_cwday(day)
+    Date::DAYNAMES.index(day.capitalize) + 1
+  end
+
+  def calculate_day_times(day_number, times)
+    start_of_day = Time.now.beginning_of_week + (day_number -1).days
+    available_start = Time.parse("#{start_of_day.to_date} #{times['start']}")
+    available_end = Time.parse("#{start_of_day.to_date} #{times['end']}")
+    [available_start, available_end]
+  end
+
+  def filter_events_for_day(events, day_number)
+    events.select { |e| e[:start].to_date.cwday == day_number }.sort_by! { |e| e[:start] }
+  end
+
+  def find_free_slots_within_day(day_events, available_start, available_end)
+    free_slots = []
+    previous_end = available_start
+    day_events.each do |event|
+      if event[:start] > previous_end
+        free_slots[day] << { start: previous_end, end: event[:start] }
+      end
+      previous_end = [previous_end, event[:end]].max
+    end
+
+    add_remaining_free_time(free_slots, previous_end, available_end)
+    free_slots
+  end
+
+  def add_remaining_free_time(free_slots, previous_end, available_end)
+    if previous_end < available_end
+      free_slots << TimeSlot.new(previous_end, available_end )
     end
   end
+
 end

@@ -4,7 +4,7 @@
     <div class="col-4">
       <div class="card mx-4 my-2">
         <div class="card-header">
-          <%= current_user.email %> Events
+          <%= current_user.email %>
         </div>
         <div class="card-body">
           <% if @user_events.any? %>
@@ -15,7 +15,7 @@
                 <div class="card-body">
                   <h5 class="card-title"><%= event[:summary] %></h5>
                   <p class="card-text">
-                    <strong>Day:</strong> <%= start_time.strftime('%A, %Y-%m-%d') %><br>
+                    <strong>Day:</strong> <%= start_time.to_date.to_s(:long) %><br>
                     <strong>Start Time:</strong> <%= start_time.strftime('%H:%M') %><br>
                     <strong>End Time:</strong> <%= end_time.strftime('%H:%M') %><br>
                     <strong>Calendar:</strong> <%= event[:calendar_name] %>
@@ -44,7 +44,7 @@
                 <div class="card-body">
                   <h5 class="card-title"><%= event[:summary] %></h5>
                   <p class="card-text">
-                    <strong>Day:</strong> <%= start_time.strftime('%A, %Y-%m-%d') %><br>
+                    <strong>Day:</strong> <%= start_time.to_date.to_s(:long) %><br>
                     <strong>Start Time:</strong> <%= start_time.strftime('%H:%M') %><br>
                     <strong>End Time:</strong> <%= end_time.strftime('%H:%M') %><br>
                     <strong>Calendar:</strong> <%= event[:calendar_name] %>
@@ -60,34 +60,32 @@
     </div>
     
     <div class="col-4">
-  <div class="card mx-4 my-2">
-    <div class="card-header">
-      Robert's Availability
-    </div>
-    <div class="card-body">
-      <% today = Time.now.to_date %>
-      <% @free_slots.select { |day_str, _slots| Date.parse(day_str) >= today }.each do |day_str, slots| %>
-        <% day = Date.parse(day_str) %>
-        <% if slots.any? %>
-          <% slots.each do |slot| %>
-            <div class="card mb-3">
-              <div class="card-body">
-                <h5 class="card-title"><%= "#{day.strftime('%Y-%m-%d')}" %></h5>
-                <p class="card-text">
-                  <strong>Available Time:</strong> <%= "#{slot[:start].strftime('%H:%M')} - #{slot[:end].strftime('%H:%M')}" %>
-                </p>
-              </div>
-            </div>
+      <div class="card mx-4 my-2">
+        <div class="card-header">
+          Robert's Availability
+        </div>
+        <div class="card-body">
+          <% today = Date.today %>
+          <% @free_slots.select { |day_str, _slots| Date.parse(day_str) >= today }.each do |day_str, slots| %>
+            <% day = Date.parse(day_str) %>
+            <% if slots.any? %>
+              <% slots.each do |slot| %>
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <h5 class="card-title"><%= day.strftime('%A, %Y-%m-%d') %></h5>
+                    <p class="card-text">
+                      <strong>Available Time:</strong> <%= "#{slot.start.strftime('%H:%M')} - #{slot.end.strftime('%H:%M')}" %>
+                    </p>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <p>No availability found for <%= day.to_s(:long) %>.</p>
+            <% end %>
           <% end %>
-        <% else %>
-          <p>No availability found for <%= day.strftime('%Y-%m-%d') %>.</p>
-        <% end %>
-      <% end %>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
-
     
     <div class="col-12 text-center my-4">
       <% if current_user.email == 'robertgradowski00@gmail.com' %>
@@ -96,6 +94,3 @@
     </div>
   </div>
 </div>
-
-
-
