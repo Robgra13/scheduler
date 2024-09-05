@@ -1,11 +1,16 @@
-# This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
+require 'support/vcr_setup'
+
 ENV['RAILS_ENV'] ||= 'test'
 require_relative '../config/environment'
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require 'rspec/rails'
-# Add additional requires below this line. Rails is not loaded until this point!
+
+require 'webmock/rspec'
+WebMock.disable_net_connect!(allow_localhost: true) # Blocks external requests except localhost
+
+Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are

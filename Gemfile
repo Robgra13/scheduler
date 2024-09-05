@@ -54,8 +54,10 @@ gem 'devise'
 
 gem 'omniauth-rails_csrf_protection'
 
-	gem 'bootstrap', '~> 5.3.0.alpha3'
-	gem 'jquery-rails'
+gem 'bootstrap', '~> 5.3.0.alpha3'
+gem 'jquery-rails'
+
+gem 'dotenv-rails', groups: [:development, :test]
 
 
 
@@ -81,5 +83,7 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem 'rspec-rails'
+  gem 'vcr'
+  gem 'webmock'
 
 end

@@ -109,9 +109,9 @@ class GoogleCalendarService
     auth_client = client_secrets.to_authorization
     auth_client.update!(
       scope: 'https://www.googleapis.com/auth/calendar.readonly',
-      access_token: @current_user.token,
-      refresh_token: @current_user.refresh_token,
-      expires_at: @current_user.expires_at
+      access_token: @current_user.token || ENV['GOOGLE_ACCESS_TOKEN'],
+      refresh_token: @current_user.refresh_token || ENV['GOOGLE_REFRESH_TOKEN'],
+      expires_at: @current_user.expires_at || Time.now + 1.hour
     )
 
     auth_client
@@ -141,7 +141,7 @@ class GoogleCalendarService
     previous_end = available_start
     day_events.each do |event|
       if event[:start] > previous_end
-        free_slots[day] << { start: previous_end, end: event[:start] }
+        free_slots << TimeSlot.new(previous_end, event[:start])
       end
       previous_end = [previous_end, event[:end]].max
     end
